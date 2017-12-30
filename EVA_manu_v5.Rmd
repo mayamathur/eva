@@ -16,8 +16,6 @@ header-includes:
 - \usepackage{lettrine}
 - \usepackage{paralist}
 - \usepackage{setspace}\singlespacing
-- \usepackage[square,numbers,super]{natbib}
-- \setcitestyle{square,numbers,super}
 - \usepackage{url}
 - \usepackage{parskip}
 - \usepackage{color,soul}
@@ -30,68 +28,118 @@ bibliography: refs_eva_2.bib
 
 \section*{$\beta$-amyloid example}
 
-```{r}
-##### Pike 2007
-
-# estimate SD of X from scraped data
-setwd("~/Dropbox/Personal computer/Independent studies/E-value analog (EVA)/Possible applied examples/Amyloid")
-d = read.csv( "scraped_pike.csv", header = FALSE )
-
-d = read.csv( "full_prepped_dataset.csv", header = FALSE )
-
-d = read.csv( "prepped_data.csv" )
-
-# use Table 1 to get marginal expectation of episodic memory
-N = c(31, 33, 32, 24, 6, 3, 20, 13)
-means = c(-3.29, -2.04, -0.02, -2.7, -0.1, -0.6, -2.7, -1.1)
-EY = sum( N * means ) / sum(N)
-delta = -1  # consider an 1-unit DECREASE in amyloid to have positive ACE on memory
-bx = -0.67 
-
-# assuming bivariate normality and no interactions
-( E.pt = uniroot( f = function(x) ( EY + delta * bx - EY * x ) * ( (1+x) / (2*x) ), interval = c(1, 15) )$root )
-# confounding above and beyond age, sex, education
-
-# for confidence interval
-# they just report p < 0.001, so assume p = 0.001 exactly
-p = 0.001
-z = abs( qnorm(p/2) )
-SE = bx / z # because bx / SE = z
-bx.lo = bx - SE * abs( qnorm(0.025) )
-
-# can also scrape data from Fig 3 to check bivariate normality
-
-
-# plot the ACE bound
-ACE_bound = function( .EY, .delta, .bx, .B ) {
-  ( .EY + .delta * .bx - .EY * .B ) * ( (1+.B) / (2*.B) )
-}
-
-B = seq(1, 5, 0.5)
-ACE = ACE_bound( EY, delta, bx, B )
-
-plot( B, ACE )
-
-B = 1.1
-( EY + delta * bx - EY * B )
-( (1+B) / (2*B) )
+```{r, echo = FALSE}
+# ##### Pike 2007
+# 
+# # estimate SD of X from scraped data
+# setwd("~/Dropbox/Personal computer/Independent studies/E-value analog (EVA)/Possible applied examples/Amyloid")
+# d = read.csv( "scraped_pike.csv", header = FALSE )
+# 
+# d = read.csv( "full_prepped_dataset.csv", header = FALSE )
+# 
+# d = read.csv( "prepped_data.csv" )
+# 
+# # use Table 1 to get marginal expectation of episodic memory
+# N = c(31, 33, 32, 24, 6, 3, 20, 13)
+# means = c(-3.29, -2.04, -0.02, -2.7, -0.1, -0.6, -2.7, -1.1)
+# EY = sum( N * means ) / sum(N)
+# bx = -0.67 
+# 
+# # assuming bivariate normality and no interactions
+# ( E.pt = uniroot( f = function(x) ( EY + delta * bx - EY * x ) * ( (1+x) / (2*x) ), interval = c(1, 15) )$root )
+# # confounding above and beyond age, sex, education
+# 
+# # for confidence interval
+# # they just report p < 0.001, so assume p = 0.001 exactly
+# p = 0.001
+# z = abs( qnorm(p/2) )
+# SE = bx / z # because bx / SE = z
+# bx.lo = bx - SE * abs( qnorm(0.025) )
+# 
+# # can also scrape data from Fig 3 to check bivariate normality
+# 
+# 
+# # plot the ACE bound
+# ACE_bound = function( .EY, .delta, .bx, .B ) {
+#   ( .EY + .delta * .bx - .EY * .B ) * ( (1+.B) / (2*.B) )
+# }
+# 
+# B = seq(1, 5, 0.5)
+# ACE = ACE_bound( EY, delta, bx, B )
+# 
+# plot( B, ACE )
+# 
+# B = 1.1
+# ( EY + delta * bx - EY * B )
+# ( (1+B) / (2*B) )
 ```
 
 \section*{Appendix - NEW VERSION}
 
+\subsection{Converting univariable regression results to Cohen's $d$}
+
+Assume that $(X,Y)$ are bivariate normal and consider the Cohen's $d$ associated with an increase of $\Delta$ units in $X$:
+
+\begin{align*}
+d &= \frac{ E [ Y \; \vert \; X=c+\Delta ] - E [ Y \; \vert \; X=c ] }{ \sigma_{Y|X} } \\
+&= \frac{ \Delta \beta }{ \sigma_Y \sqrt{1 - \rho_{XY}^2} } \\
+&= \frac{ \Delta \beta }{ \sigma_Y \sqrt{1 - \frac{ \beta^2 \sigma^2_X }{ \sigma^2_Y} } } \\
+&= \frac{ \Delta \rho_{XY} }{ \sigma_X \sqrt{1 - \rho_{XY}^2} }
+\end{align*}
+
+where the denominator comes from a well-known property of the bivariate normal distribution. 
+
+An approximate standard error can be derived using the delta method. Let $z_{fis} = XXX$ be the Fisher-transformed correlation, which is approximately normal with variance $\frac{1}{N-3}$. Define the transformation:
+
+\begin{align*}
+g(z_{fis}) &= d = \frac{ \Delta \text{tanh} \left(z_{fis}\right) }{ \sigma_X \sqrt{1 - \text{tanh}^2 \left(z_{fis}\right)} } \\
+SE_{d} &\approx \sqrt{ \text{Var}(z_{fis}) } \left( g'\left( z_{fis} \right) \right) \\
+&= \frac{1}{\sqrt{N-3}} \times \frac{\Delta}{\sigma_X \sqrt{ \text{sech}^2(z_{fis}) } } \\
+&= \frac{\Delta}{ \sigma_X \sqrt{ (N-3) \left( 1 - \rho_{XY}^2 \right) } } \\
+&= \frac{\Delta}{ \sigma_X \sqrt{ (N-3) \left( 1 - \beta^2 \frac{\sigma^2_X}{\sigma^2_Y} \right) } }
+\end{align*}
+
+
+\subsection{E-value for a univariable regression}
+
+\begin{align*}
+RR \approx \exp\left( 0.91 \times \frac{ \Delta \rho_{XY} }{ \sigma_X \sqrt{1 - \rho_{XY}^2} } \right)
+\end{align*}
+
+CI:
+\begin{align*}
+RR_{lb} &\approx \exp\left( 0.91 \times \frac{ \Delta \rho_{XY} }{ \sigma_X \sqrt{1 - \rho_{XY}^2} } - 1.78 \times SE_{d} \right) \\
+&= RR_{ub} \approx \exp\left( 0.91 \times \frac{ \Delta \rho_{XY} }{ \sigma_X \sqrt{1 - \rho_{XY}^2} } + 1.78 \times SE_{d} \right)
+\end{align*}
+
+\subsection{Converting multivariable regression results to Cohen's $d$}
+
+\begin{align*}
+R^2_{Y \sim X | Z} &= 1 - \frac{SSE_{full}}{SSE_{red}} \\
+&= 1 - \frac{ \sigma^2_{Y|X,\mathbf{Z}} }{ \sigma^2_{Y|\mathbf{Z}} } \\
+\sigma^2_{Y|X,\mathbf{Z}} &= \sigma^2_{Y|\mathbf{Z}} \left( 1 - R^2_{Y \sim X | Z} \right)
+\end{align*}
+DOES THIS USE MVN ASSUMPTION?
+
+
+\begin{align*}
+d &= \frac{ E [ Y \; \vert \; X=c+\Delta, \mathbf{Z} ] - E [ Y \; \vert \; X=c, \mathbf{Z} ] }{ \sigma_{Y|X, \mathbf{Z}} } \\
+&= \frac{ \Delta \beta }{ \sigma_{Y|\mathbf{Z}} \sqrt{ 1 - R^2_{Y \sim X | Z} } } \\
+& \ge \frac{ \Delta \beta }{ \sigma_{Y} \sqrt{ 1 - R^2_{Y \sim X | Z} } }
+\end{align*}
+
+Unlike in the univariable case, a simple relationship between $\beta$ and $R^2_{Y \sim X | Z}$ is not available with additional distributional assumptions, so both quantities are needed to approximate $d$. 
+
+Standard error: Going to be hard because inference for $R^2_{Y \sim X | Z}$ won't be available
 
 
 
+* describe what to do for preventive: just set delta to be negative?
+* say that, for univariable case, if SD of X isn't available, can set Delta = SD of X
 
-\section*{Appendix - OLD VERSION}
 
-\subsection{E-value for a linear regression coefficient}
 
-\subsubsection{General form}
-
-* If covariates are centered, then don't need their coefficients because expectations are 0
-
-* describe what to do for preventive: just set delta to be negative
+\section{OLD STUFF}
 
 * outcome should be nonnegative: problem for bivariate normality...
 
