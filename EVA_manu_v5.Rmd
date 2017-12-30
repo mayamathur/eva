@@ -26,57 +26,42 @@ citation_package: natbib
 bibliography: refs_eva_2.bib
 ---
 
+\section*{Main text}
+
+In general, we would recommend using $\Delta = 1$ in order to assess the E-value for the effect size corresponding directly to the regression coefficient, which represents a 1-unit contrast in $X$. However, if the units of $X$ are very fine-grained (e.g., if $X$ is blood pressure in mmHg), then a 1-unit increase may not be considered clinically meaningful, and a different choice of $\Delta$ may be used (e.g., $\Delta = 10$ to represent an increase in blood pressure of 10 mmHg), which is equivalent to rescaling the regression coefficient. It is imperative to report the choice of $\Delta$ if it is not taken to be 1, since it directly impacts the size and interpretation of the E-value analog. 
+
 \section*{$\beta$-amyloid example}
 
-```{r, echo = FALSE}
-# ##### Pike 2007
-# 
-# # estimate SD of X from scraped data
-# setwd("~/Dropbox/Personal computer/Independent studies/E-value analog (EVA)/Possible applied examples/Amyloid")
-# d = read.csv( "scraped_pike.csv", header = FALSE )
-# 
-# d = read.csv( "full_prepped_dataset.csv", header = FALSE )
-# 
-# d = read.csv( "prepped_data.csv" )
-# 
-# # use Table 1 to get marginal expectation of episodic memory
-# N = c(31, 33, 32, 24, 6, 3, 20, 13)
-# means = c(-3.29, -2.04, -0.02, -2.7, -0.1, -0.6, -2.7, -1.1)
-# EY = sum( N * means ) / sum(N)
-# bx = -0.67 
-# 
-# # assuming bivariate normality and no interactions
-# ( E.pt = uniroot( f = function(x) ( EY + delta * bx - EY * x ) * ( (1+x) / (2*x) ), interval = c(1, 15) )$root )
-# # confounding above and beyond age, sex, education
-# 
-# # for confidence interval
-# # they just report p < 0.001, so assume p = 0.001 exactly
-# p = 0.001
-# z = abs( qnorm(p/2) )
-# SE = bx / z # because bx / SE = z
-# bx.lo = bx - SE * abs( qnorm(0.025) )
-# 
-# # can also scrape data from Fig 3 to check bivariate normality
-# 
-# 
-# # plot the ACE bound
-# ACE_bound = function( .EY, .delta, .bx, .B ) {
-#   ( .EY + .delta * .bx - .EY * .B ) * ( (1+.B) / (2*.B) )
-# }
-# 
-# B = seq(1, 5, 0.5)
-# ACE = ACE_bound( EY, delta, bx, B )
-# 
-# plot( B, ACE )
-# 
-# B = 1.1
-# ( EY + delta * bx - EY * B )
-# ( (1+B) / (2*B) )
+```{r, echo = FALSE, message = FALSE}
+library(EValue)
+
+evalues.corr = function( r, SDx, delta, N = NA ) {
+  d = (delta * r) / ( SDx * sqrt(1-r^2) )
+  
+  if( !is.na(N) ) se = delta / ( SDx * sqrt( (N-3) * (1 - r^2) ) )
+  else se = NA 
+  
+  evalues.MD( est = d, se = se )
+}
+  
+##### Pike 2007's Figures 3-4
+# E-values for 1-SD increase in episodic memory
+evalues.corr( r = -0.73, 1, 1, N = 31 + 33 + 32 )  # all subjects
+evalues.corr( r = 0.04, 1, 1, N = 31 )  # AD
+evalues.corr( r = -0.60, 1, 1, N = 33 )  # MCI
+evalues.corr( r = -0.38, 1, 1, N = 32 )  # MCI  
 ```
 
 \section*{Appendix - NEW VERSION}
 
 \subsection{Converting univariable regression results to Cohen's $d$}
+
+Suppose we estimate the conditional mean of an outcome $Y$ given a continuous exposure of interest, $X$, via ordinary least squares:
+\begin{align*}
+E \big[ Y \; \vert \; X \big] &= \beta_0 + \beta_X X \\
+\end{align*}
+
+where $\beta_0$ denotes the intercept and $\beta_X$ denotes the estimated coefficient of $X$. Suppose that the effect size of interest is the increase in $Y$ caused by a $\Delta$-unit increase in $X$. 
 
 Assume that $(X,Y)$ are bivariate normal and consider the Cohen's $d$ associated with an increase of $\Delta$ units in $X$:
 
@@ -114,6 +99,13 @@ RR_{lb} &\approx \exp\left( 0.91 \times \frac{ \Delta \rho_{XY} }{ \sigma_X \sqr
 
 \subsection{Converting multivariable regression results to Cohen's $d$}
 
+Extend the regression model in (EQUATION) to include arbitrary measured covariates $\mathbf{Z}$:
+\begin{align*}
+\widehat{E} \big[ Y \; \vert \; X, \mathbf{Z} \big] &= \widehat{\beta}_0 + \widehat{\beta}_X X + \mathbf{ \boldsymbol{\widehat{\beta} }_{Z}' Z}
+\end{align*}
+
+where $\boldsymbol{\widehat{\beta}}_{Z}$ denotes a vector of estimated coefficients for $\mathbf{Z}$.
+
 \begin{align*}
 R^2_{Y \sim X | Z} &= 1 - \frac{SSE_{full}}{SSE_{red}} \\
 &= 1 - \frac{ \sigma^2_{Y|X,\mathbf{Z}} }{ \sigma^2_{Y|\mathbf{Z}} } \\
@@ -139,53 +131,5 @@ Standard error: Going to be hard because inference for $R^2_{Y \sim X | Z}$ won'
 
 
 
-\section{OLD STUFF}
-
-* outcome should be nonnegative: problem for bivariate normality...
-
-Suppose we estimate the conditional mean of a nonnegative outcome $Y$ given a continuous exposure of interest, $X$, and arbitrary measured covariates $\mathbf{Z}$ (taken to include any interactions modeled between $X$ and other measured covariates), via a linear regression model:
-\begin{align*}
-\widehat{E} \big[ Y \; \vert \; X, \mathbf{Z} \big] &= \widehat{\beta}_0 + \widehat{\beta}_X X + \mathbf{ \boldsymbol{\widehat{\beta} }_{Z}' Z}
-\end{align*}
-
-where $\widehat{\beta}_0$ denotes the estimated intercept, $\widehat{\beta}_X$ denotes the estimated coefficient of $X$, and $\boldsymbol{\widehat{\beta}}_{Z}$ denotes a vector of estimated coefficients for $\mathbf{Z}$. To define an effect size on which to perform sensitivity analysis, fix a contrast of interest between two levels of $X$ (denoted $X = c_2$ vs. $X = c_1$). We take the causal effect of ultimate interest to be the average causal effect ($ACE$) in a hypothetical population in which the covariate distributions of those with $X = c_2$ in the sample and of those with $X = c_1$ in the sample each have prevalence 50\%. Then, letting $B$ denote the joint bias factor [@evalue], we can perform sensitivity analysis as a special case of @ding's Proposition A.20:
-
-\begin{align}
-\label{general_form}
-ACE & \ge \left( \widehat{E} \big[ Y \; \vert \; X = c_2 \big] - \widehat{E} \big[ Y \; \vert \; X = c_1 \big] \cdot B \right) \times \left( \frac{1}{2} + \frac{1}{2B} \right) \notag \\
-&= \left( \widehat{E}_{\mathbf{Z}} \Big[ \widehat{E}_Y \big[ Y \; \vert \; X = c_2, \mathbf{Z} \big] \Big] - \widehat{E}_{\mathbf{Z}} \Big[ \widehat{E}_Y \big[ Y \; \vert \; X = c_1, \mathbf{Z} \big] \Big] \cdot B \right) \times \left( \frac{1}{2} + \frac{1}{2B} \right) \notag \\
-&= \left( \widehat{E}_{\mathbf{Z}}  \big[ \widehat{\beta}_0 + \widehat{\beta}_X c_2 + \mathbf{ \boldsymbol{\widehat{\beta}}_{Z}' \mathbf{Z} } \big] - \widehat{E}_{\mathbf{Z}}  \big[ \widehat{\beta}_0 + \widehat{\beta}_X c_1 + \mathbf{ \boldsymbol{\widehat{\beta}}_{Z}' \mathbf{Z} } \big] \cdot B \right) \times \left( \frac{B+1}{2B} \right) \notag \\
-&= \left( \left( \widehat{\beta}_0 + \widehat{\beta}_X c_2 + \mathbf{ \boldsymbol{\widehat{\beta}}_{Z}' } \widehat{E}[ \mathbf{Z} ] \right) - \left( \widehat{\beta}_0 + \widehat{\beta}_X c_1 + \mathbf{ \boldsymbol{\widehat{\beta}}_{Z}' } \widehat{E}[ \mathbf{Z} ] \right) \cdot B \right) \times \left( \frac{B+1}{2B} \right) \notag \\
-&= \left( \left( 1 - B \right) \left( \widehat{\beta}_0 + \mathbf{ \boldsymbol{\widehat{\beta}}_{Z}' } \widehat{E}[ \mathbf{Z} ] \right) - \widehat{\beta}_X \left( c_2 - B c_1 \right) \right) \times  \left( \frac{B+1}{2B} \right)
-\end{align}
-
-The E-value for the point estimate can then be approximated by setting the left-hand side equal to 0 and using a numerical search to solve for $B$, and the E-values for the confidence interval can be approximated by replacing $\widehat{\beta}_X$ in the above expression with its lower confidence interval limit. The interpretations of $B$ and the E-value change slightly given the continuous outcome [@ding]: the sensitivity parameter $RR_{UY}$ becomes a maximum ratio of conditional outcome means, rather than a maximum relative risk, while $RR_{XU}$ is still interpreted in terms of the relative risk comparing levels of $U$ conditional on $X = c_2$ versus $X = c_1$. Thus, an E-value of 2 would imply that true $ACE$ defined above could be zero if there were, for example, a binary unmeasured confounder that were twice as prevalent conditional on $X = c_2$ versus on $X = c_1$ and such that the mean of $Y$ were twofold higher when $U=1$ versus when $U=0$ conditional on either $X = c_2$ or $X = c_1$ (all conditional on the measured covariates, $\mathbf{Z}$). 
-
-
-\subsubsection{Simplified forms with additional assumptions}
-
-Equation \ref{general_form} can be used to compute an E-value analog when one has access to raw data or published estimates for regression coefficients as well as the marginal expectations of the measured confounders. When conducting sensitivity analyses for papers that report only $\widehat{\beta}_X$ and the marginal sample mean of $Y$, one can still compute an E-value under the additional assumptions that:
-
-\begin{enumerate}
-\item $X$ and $Y$ are bivariate normal (marginally on $\mathbf{Z}$).
-\item The regression model does not include interactions of $X$ with $\mathbf{Z}$ (or any such interactions are of negligible magnitude).
-\end{enumerate}
-
-Then, set $c_1 = E[X]$ and consider the contrast $X = E[X] + \Delta$ versus $X = E[X]$ (choices of $\Delta$ are discussed below). Then, the $ACE$ associated with an increase in $X$ of $\Delta$ units for a population in which the sample covariate distribution conditional on $X = E[X] + \Delta$ and the sample covariate distribution conditional on $X = E[X]$ each have prevalence 50\% satisfies:
-\begin{align*}
-ACE &\ge \left( \widehat{E} \Big[ Y \; \vert \; X = E[X] + \Delta \Big] - \widehat{E} \Big[ Y \; \vert \; X = E[X] \Big] \cdot B \right) \times \left( \frac{1+B}{2B} \right) \notag \\
-&= \left( \widehat{E} \Big[ Y \; \vert \; X = E[X] + \Delta \Big] - \left( \widehat{E} [ Y ] + \underbrace{ \rho_{XY} \frac{\sigma_Y}{\sigma_X} \left( E[X] - E[X] \right)}_{=0} \right)  \cdot B \right) \times \left( \frac{1+B}{2B} \right) \notag \\
-&= \left( \widehat{E} \Big[ Y \; \vert \; X = E[X] + \Delta \Big] - \widehat{E} [ Y ] \cdot B \right) \times \left( \frac{1+B}{2B} \right) \notag \\
-&= \left( \widehat{E} [ Y ] + \Delta \widehat{\beta}_X - \widehat{E} [ Y ] \cdot B \right) \times \left( \frac{1+B}{2B} \right) \tag{no $X$-$\mathbf{Z}$ interactions}\\
-&= \left( \left( 1 - B \right) \widehat{E} [ Y ] + \Delta \widehat{\beta}_X \right) \times \left( \frac{1+B}{2B} \right)
-\end{align*}
-where the second line uses a well-known property regarding conditional expectations in a bivariate normal distribution (in which $\rho_{XY}$ is the correlation between $X$ and $Y$ and $\sigma_Y$ and $\sigma_X$ are marginal standard deviations). Equivalently, under the same two assumptions, one can use the estimated correlation between $X$ and $Y$ (denoted $r_{XY}$), partialling out any measured covariates $\mathbf{Z}$, along with the estimated marginal standard deviations of $X$ and $Y$ ($\widehat{\sigma}_Y$ and $\widehat{\sigma}_X$):
-\begin{align*}
-ACE &\ge \left( \left( 1 - B \right) \widehat{E} [ Y ] + \Delta r_{XY} \frac{ \widehat{\sigma}_Y }{  \widehat{\sigma}_X } \right) \times \left( \frac{1+B}{2B} \right)
-\end{align*}
-
-Again, the E-value can then be computed through a numerical search for the $B$ such that the left-hand side is 0. 
-
-In general, we would recommend using $\Delta = 1$ in order to assess the E-value for the effect size corresponding directly to the regression coefficient, which represents a 1-unit contrast in $X$. However, if the units of $X$ are very fine-grained (e.g., if $X$ is blood pressure in mmHg), then a 1-unit increase may not be considered clinically meaningful, and a different choice of $\Delta$ may be used (e.g., $\Delta = 10$ to represent an increase in blood pressure of 10 mmHg), which is equivalent to rescaling the regression coefficient. It is imperative to report the choice of $\Delta$ if it is not taken to be 1, since it directly impacts the size and interpretation of the E-value analog. 
 
 \section*{References}
