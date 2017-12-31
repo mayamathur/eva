@@ -20,6 +20,11 @@ header-includes:
 - \usepackage{parskip}
 - \usepackage{color,soul}
 - \usepackage{palatino}
+- \usepackage{amsmath, amsthm}
+- \newtheorem{theorem}{Theorem}
+- \newtheorem{corollary}{Corollary}
+- \newtheorem{lemma}{Lemma}
+
 
 output: pdf_document
 citation_package: natbib
@@ -28,7 +33,34 @@ bibliography: refs_eva_2.bib
 
 \section*{Main text}
 
+\begin{enumerate}
+\item{ Intro paragraph \begin{enumerate}
+  \item Describe E-value and why extend to regression
+  \item If you have raw data, could choose somewhere to dichotomize and use E-value for SMD or RR
+  \item We provide E-value for cases where only standard regression info is reported
+  \item Approach involves converting regression results to SMD with well-defined effect size (say why critical for E-value): show table with RR and lower and upper RR
+\end{enumerate}
+}
+
+\item{ $\beta$-amyloid example \begin{enumerate}
+\item .
+\end{enumerate}
+}
+
+\item{ Caveats \begin{enumerate}
+  \item What to do with preventative
+  \item Multiple regression
+  \item Be careful with interpretation: depends on $\Delta$
+  \item Interpretation: E-value for a $\Delta$-unit increase in X and any dichotomization of Y
+\end{enumerate}
+}
+
+\end{enumerate}
+
+
+
 In general, we would recommend using $\Delta = 1$ in order to assess the E-value for the effect size corresponding directly to the regression coefficient, which represents a 1-unit contrast in $X$. However, if the units of $X$ are very fine-grained (e.g., if $X$ is blood pressure in mmHg), then a 1-unit increase may not be considered clinically meaningful, and a different choice of $\Delta$ may be used (e.g., $\Delta = 10$ to represent an increase in blood pressure of 10 mmHg), which is equivalent to rescaling the regression coefficient. It is imperative to report the choice of $\Delta$ if it is not taken to be 1, since it directly impacts the size and interpretation of the E-value analog. 
+
 
 \section*{$\beta$-amyloid example}
 
@@ -52,9 +84,32 @@ evalues.corr( r = -0.60, 1, 1, N = 33 )  # MCI
 evalues.corr( r = -0.38, 1, 1, N = 32 )  # MCI  
 ```
 
-\section*{Appendix - NEW VERSION}
+\section*{Appendix}
+
+Cover somewhere:
+
+*Assumptions inherited from Chinn's conversion from d to log-OR: distrubtion of Y within each outcome group is logistic, but according to Chinn, this is basically the same as normality
+
 
 \subsection{Converting univariable regression results to Cohen's $d$}
+
+\begin{lemma}
+Under the standard OLS framework, suppose that $Y = \beta_0 + \beta X + \epsilon$ with $X \amalg \epsilon$ and $E [ \epsilon ] = 0$. Then $ \sigma^2_{Y | X} = \left( 1 - r_{YX}^2 \right) \sigma^2_{Y}$. 
+
+\begin{proof}
+
+\begin{align*}
+ \sigma^2_{Y} &= E [ \sigma^2_{Y | X} ] + Var \left( E [ Y | X ] \right) \\
+  &= \sigma^2_{Y | X} + Var \left( \beta_0 + \beta X \right) \tag{homoskedasticity} \\
+ &= \sigma^2_{Y | X} + \beta^2 \sigma^2_X \\
+ &= \sigma^2_{Y | X} + r_{YX}^2 \sigma^2_Y \\
+ \sigma^2_{Y | X} &= \left( 1 - r_{YX}^2 \right) \sigma^2_{Y}
+ \end{align*}
+
+\end{proof}
+\end{lemma}
+
+
 
 Suppose we estimate the conditional mean of an outcome $Y$ given a continuous exposure of interest, $X$, via ordinary least squares:
 \begin{align*}
@@ -111,7 +166,7 @@ R^2_{Y \sim X | Z} &= 1 - \frac{SSE_{full}}{SSE_{red}} \\
 &= 1 - \frac{ \sigma^2_{Y|X,\mathbf{Z}} }{ \sigma^2_{Y|\mathbf{Z}} } \\
 \sigma^2_{Y|X,\mathbf{Z}} &= \sigma^2_{Y|\mathbf{Z}} \left( 1 - R^2_{Y \sim X | Z} \right)
 \end{align*}
-DOES THIS USE MVN ASSUMPTION?
+DOES THIS USE MVN ASSUMPTION? FLESH OUT THIS STEP. SEEMS LIKE WE ONLY NEED NORMAL ERRORS. 
 
 
 \begin{align*}
@@ -122,7 +177,10 @@ d &= \frac{ E [ Y \; \vert \; X=c+\Delta, \mathbf{Z} ] - E [ Y \; \vert \; X=c, 
 
 Unlike in the univariable case, a simple relationship between $\beta$ and $R^2_{Y \sim X | Z}$ is not available with additional distributional assumptions, so both quantities are needed to approximate $d$. 
 
-Standard error: Going to be hard because inference for $R^2_{Y \sim X | Z}$ won't be available
+Note that you can use partial correlation or partial R^2 from regression table. 
+
+Standard error:
+Going to be hard because inference for $R^2_{YX | Z}$ won't be available. For an approximation, can use $Var\left( z^f_{YX | Z}\right) \approx Var\left( z^f_{YX}\right) = \frac{1}{N-3}$
 
 
 
