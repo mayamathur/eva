@@ -1,6 +1,6 @@
 ---
 title: ''
-
+citation_package: natbib
 header-includes:
 - \usepackage[T1]{fontenc}
 - \usepackage{microtype}
@@ -24,12 +24,74 @@ header-includes:
 - \newtheorem{theorem}{Theorem}
 - \newtheorem{corollary}{Corollary}
 - \newtheorem{lemma}{Lemma}
-
-
-output: pdf_document
-citation_package: natbib
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
 bibliography: refs_eva_2.bib
 ---
+
+
+\doublespacing
+
+\begin{center}
+\textbf{ \LARGE{Approximating Cohen's $d$ from Regression Results} }
+\vspace{10mm}
+\end{center}
+
+\doublespacing
+
+\vspace{10mm}
+\begin{center}
+\large{ \emph{ Maya B. Mathur$^{1, 2\ast}$, Peng Ding$^{3}$, Corinne A. Riddell$^{4}$, and Tyler J. VanderWeele$^{1,5}$ } }
+\end{center}
+
+\vspace{10mm}
+
+\small{$^{1}$ Department of Biostatistics, Harvard T. H. Chan School of Public Health, Boston, MA, USA}
+
+\small{$^{2}$Quantitative Sciences Unit, Stanford University, Palo Alto, CA, USA}
+
+\small{$^{3}$Department of Statistics, University of California at Berkeley, Berkeley, CA, USA}
+
+\small{$^{4}$Department of Epidemiology, Biostatistics, and Occupational Health, McGill University, Montréal, Quebec, CA}
+
+\small{$^{5}$Department of Epidemiology, Harvard T. H. Chan School of Public Health, Boston, MA, USA}
+
+
+\vspace{10mm}
+\begin{singlespacing} 
+\small{$\ast$: Corresponding author:\\
+mmathur@stanford.edu\\
+Quantitative Sciences Unit (c/o Inna Sayfer)\\
+1070 Arastradero Road\\
+Palo Alto, CA\\
+94305
+}
+
+
+\end{singlespacing}
+
+\vspace{10mm}
+
+\emph{Type of manuscript}: Research Letter
+
+\emph{Keywords}: software, code, sensitivity analysis, confounding
+
+\emph{Running head}: ``Package and Website for E-Values''
+
+\emph{Conflicts of interest}: The authors declare that they have no conflicts of interest. 
+
+\emph{Reproducibility}: No data analyses were conducted.   
+
+\emph{Source of funding}: MM was supported by National Defense Science and Engineering Graduate Fellowship 32 CFR 168a. PD was supported by IES Grant R305D150040 from the Institute for Education Science and DMS grant 1713152 from the National Science Foundation. CAR received salary support from McGill University's Department of Epidemiology, Biostatistics, and Occupational Health. TVW was supported by NIH grant ES017876. The funders had no role in the design, conduct, or reporting of this research.
+
+
+
+\newpage
+
+\setlength{\parskip}{1em}
+
 
 \section*{Main text}
 
@@ -84,17 +146,22 @@ evalues.corr( r = -0.60, 1, 1, N = 33 )  # MCI
 evalues.corr( r = -0.38, 1, 1, N = 32 )  # MCI  
 ```
 
+\newpage
+
 \section*{Appendix}
 
 Cover somewhere:
 
-*Assumptions inherited from Chinn's conversion from d to log-OR: distrubtion of Y within each outcome group is logistic, but according to Chinn, this is basically the same as normality
+* Assumptions inherited from Chinn's conversion from d to log-OR: distrubtion of Y within each outcome group is logistic, but according to Chinn, this is basically the same as normality
+* Describe what to do for preventive: just set delta to be negative?
+* Say that, for univariable case, if SD of X isn't available, can set Delta = SD of X
+
 
 
 \subsection{Converting univariable regression results to Cohen's $d$}
 
 \begin{lemma}
-Under the standard OLS framework, suppose that $Y = \beta_0 + \beta X + \epsilon$ with $X \amalg \epsilon$ and $E [ \epsilon ] = 0$. Then $ \sigma^2_{Y | X} = \left( 1 - r_{YX}^2 \right) \sigma^2_{Y}$. 
+Under the standard OLS framework, suppose that $Y = \beta_0 + \beta X + \epsilon$ with $X \amalg \epsilon$ and $E [ \epsilon ] = 0$. Then $ \sigma^2_{Y | X} = \left( 1 - \rho_{YX}^2 \right) \sigma^2_{Y}$. 
 
 \begin{proof}
 
@@ -102,39 +169,29 @@ Under the standard OLS framework, suppose that $Y = \beta_0 + \beta X + \epsilon
  \sigma^2_{Y} &= E [ \sigma^2_{Y | X} ] + Var \left( E [ Y | X ] \right) \\
   &= \sigma^2_{Y | X} + Var \left( \beta_0 + \beta X \right) \tag{homoskedasticity} \\
  &= \sigma^2_{Y | X} + \beta^2 \sigma^2_X \\
- &= \sigma^2_{Y | X} + r_{YX}^2 \sigma^2_Y \\
- \sigma^2_{Y | X} &= \left( 1 - r_{YX}^2 \right) \sigma^2_{Y}
+ &= \sigma^2_{Y | X} + \rho_{YX}^2 \sigma^2_Y \\
+ \sigma^2_{Y | X} &= \left( 1 - \rho_{YX}^2 \right) \sigma^2_{Y}
  \end{align*}
 
 \end{proof}
 \end{lemma}
 
 
-
-Suppose we estimate the conditional mean of an outcome $Y$ given a continuous exposure of interest, $X$, via ordinary least squares:
-\begin{align*}
-E \big[ Y \; \vert \; X \big] &= \beta_0 + \beta_X X \\
-\end{align*}
-
-where $\beta_0$ denotes the intercept and $\beta_X$ denotes the estimated coefficient of $X$. Suppose that the effect size of interest is the increase in $Y$ caused by a $\Delta$-unit increase in $X$. 
-
-Assume that $(X,Y)$ are bivariate normal and consider the Cohen's $d$ associated with an increase of $\Delta$ units in $X$:
+Suppose that the effect size of interest is the increase in $Y$ caused by a $\Delta$-unit increase in $X$, and  consider the Cohen's $d$ associated with an increase of $\Delta$ units in $X$:
 
 \begin{align*}
 d &= \frac{ E [ Y \; \vert \; X=c+\Delta ] - E [ Y \; \vert \; X=c ] }{ \sigma_{Y|X} } \\
-&= \frac{ \Delta \beta }{ \sigma_Y \sqrt{1 - \rho_{XY}^2} } \\
+&= \frac{ \Delta \beta }{ \sigma_Y \sqrt{1 - \rho_{YX}^2} } \\
 &= \frac{ \Delta \beta }{ \sigma_Y \sqrt{1 - \frac{ \beta^2 \sigma^2_X }{ \sigma^2_Y} } } \\
-&= \frac{ \Delta \rho_{XY} }{ \sigma_X \sqrt{1 - \rho_{XY}^2} }
+&= \frac{ \Delta \rho_{YX} }{ \sigma_X \sqrt{1 - \rho_{YX}^2} }
 \end{align*}
 
-where the denominator comes from a well-known property of the bivariate normal distribution. 
-
-An approximate standard error can be derived using the delta method. Let $z_{fis} = XXX$ be the Fisher-transformed correlation, which is approximately normal with variance $\frac{1}{N-3}$. Define the transformation:
+An approximate standard error can be derived using the delta method. Let $z^f = \text{arctanh}(\rho)$ be the Fisher-transformed correlation, which is approximately normal with variance $\frac{1}{N-3}$. Define the transformation:
 
 \begin{align*}
-g(z_{fis}) &= d = \frac{ \Delta \text{tanh} \left(z_{fis}\right) }{ \sigma_X \sqrt{1 - \text{tanh}^2 \left(z_{fis}\right)} } \\
-SE_{d} &\approx \sqrt{ \text{Var}(z_{fis}) } \left( g'\left( z_{fis} \right) \right) \\
-&= \frac{1}{\sqrt{N-3}} \times \frac{\Delta}{\sigma_X \sqrt{ \text{sech}^2(z_{fis}) } } \\
+g(z^f) &= d = \frac{ \Delta \text{tanh} \left(z^f\right) }{ \sigma_X \sqrt{1 - \text{tanh}^2 \left(z^f\right)} } \\
+SE_{d} &\approx \sqrt{ \text{Var}(z^f) } \left( g'\left( z^f \right) \right) \\
+&= \frac{1}{\sqrt{N-3}} \times \frac{\Delta}{\sigma_X \sqrt{ \text{sech}^2(z^f) } } \\
 &= \frac{\Delta}{ \sigma_X \sqrt{ (N-3) \left( 1 - \rho_{XY}^2 \right) } } \\
 &= \frac{\Delta}{ \sigma_X \sqrt{ (N-3) \left( 1 - \beta^2 \frac{\sigma^2_X}{\sigma^2_Y} \right) } }
 \end{align*}
@@ -142,11 +199,12 @@ SE_{d} &\approx \sqrt{ \text{Var}(z_{fis}) } \left( g'\left( z_{fis} \right) \ri
 
 \subsection{E-value for a univariable regression}
 
+As in @ding, convert approximately to a relative risk:
 \begin{align*}
 RR \approx \exp\left( 0.91 \times \frac{ \Delta \rho_{XY} }{ \sigma_X \sqrt{1 - \rho_{XY}^2} } \right)
 \end{align*}
 
-CI:
+Approximate confidence interval limits are:
 \begin{align*}
 RR_{lb} &\approx \exp\left( 0.91 \times \frac{ \Delta \rho_{XY} }{ \sigma_X \sqrt{1 - \rho_{XY}^2} } - 1.78 \times SE_{d} \right) \\
 &= RR_{ub} \approx \exp\left( 0.91 \times \frac{ \Delta \rho_{XY} }{ \sigma_X \sqrt{1 - \rho_{XY}^2} } + 1.78 \times SE_{d} \right)
@@ -154,20 +212,20 @@ RR_{lb} &\approx \exp\left( 0.91 \times \frac{ \Delta \rho_{XY} }{ \sigma_X \sqr
 
 \subsection{Converting multivariable regression results to Cohen's $d$}
 
-Extend the regression model in (EQUATION) to include arbitrary measured covariates $\mathbf{Z}$:
+Extend the regression model to include arbitrary measured covariates $\mathbf{Z}$:
 \begin{align*}
-\widehat{E} \big[ Y \; \vert \; X, \mathbf{Z} \big] &= \widehat{\beta}_0 + \widehat{\beta}_X X + \mathbf{ \boldsymbol{\widehat{\beta} }_{Z}' Z}
+E \big[ Y \; \vert \; X, \mathbf{Z} \big] &= \beta_0 + \beta_X X + \mathbf{ \boldsymbol{\beta}_{Z}' Z}
 \end{align*}
 
-where $\boldsymbol{\widehat{\beta}}_{Z}$ denotes a vector of estimated coefficients for $\mathbf{Z}$.
+where $\boldsymbol{\beta}_{Z}$ denotes a $p$-vector of estimated coefficients for $\mathbf{Z}$. Let $R^2_{Y \sim X | Z}$ be the coefficient of partial determination of $Y$ on $X$, controlling for $\mathbf{Z}$ (equivalently, the squared partial correlation). Then:
 
 \begin{align*}
 R^2_{Y \sim X | Z} &= 1 - \frac{SSE_{full}}{SSE_{red}} \\
-&= 1 - \frac{ \sigma^2_{Y|X,\mathbf{Z}} }{ \sigma^2_{Y|\mathbf{Z}} } \\
+&\approx 1 - \frac{ \left( N - p - 2 \right) \cdot \sigma^2_{Y|X,\mathbf{Z}} }{ \left( N - 2 \right) \cdot \sigma^2_{Y|\mathbf{Z}} } \\
+&\approx 1 - \frac{ \sigma^2_{Y|X,\mathbf{Z}} }{ \sigma^2_{Y|\mathbf{Z}} } \tag{n >> p} \\
 \sigma^2_{Y|X,\mathbf{Z}} &= \sigma^2_{Y|\mathbf{Z}} \left( 1 - R^2_{Y \sim X | Z} \right)
 \end{align*}
-DOES THIS USE MVN ASSUMPTION? FLESH OUT THIS STEP. SEEMS LIKE WE ONLY NEED NORMAL ERRORS. 
-
+where the second line follows from unbiasedness of the mean squared error for the error variance. Then, an approximate Cohen's $d$ is:
 
 \begin{align*}
 d &= \frac{ E [ Y \; \vert \; X=c+\Delta, \mathbf{Z} ] - E [ Y \; \vert \; X=c, \mathbf{Z} ] }{ \sigma_{Y|X, \mathbf{Z}} } \\
@@ -175,17 +233,12 @@ d &= \frac{ E [ Y \; \vert \; X=c+\Delta, \mathbf{Z} ] - E [ Y \; \vert \; X=c, 
 & \ge \frac{ \Delta \beta }{ \sigma_{Y} \sqrt{ 1 - R^2_{Y \sim X | Z} } }
 \end{align*}
 
+Because $\sigma_{Y|\mathbf{Z}}$ is not commonly reported, the final line provides a conservative lower bound on $d$ using the more commonly reported $\sigma_{Y}$. 
+
 Unlike in the univariable case, a simple relationship between $\beta$ and $R^2_{Y \sim X | Z}$ is not available with additional distributional assumptions, so both quantities are needed to approximate $d$. 
 
-Note that you can use partial correlation or partial R^2 from regression table. 
-
 Standard error:
-Going to be hard because inference for $R^2_{YX | Z}$ won't be available. For an approximation, can use $Var\left( z^f_{YX | Z}\right) \approx Var\left( z^f_{YX}\right) = \frac{1}{N-3}$
-
-
-
-* describe what to do for preventive: just set delta to be negative?
-* say that, for univariable case, if SD of X isn't available, can set Delta = SD of X
+Going to be hard because inference for $R^2_{YX | Z}$ won't be available. For an approximation, could maybe use $Var\left( z^f_{YX | Z}\right) \approx Var\left( z^f_{YX}\right) = \frac{1}{N-3}$, but even so, can't use delta method because estimates of $\beta$ and $R^2_{YX | Z}$ are obviously not independent. 
 
 
 
