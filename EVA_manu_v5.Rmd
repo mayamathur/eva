@@ -10,7 +10,7 @@ header-includes:
 - \pagestyle{fancy}
 - \fancyhead{}
 - \fancyfoot{}
-- \fancyhead[C]{E-Value Analog for Regression}
+- \fancyhead[C]{Approximating Cohen's $d$}
 - \fancyfoot[RO,LE]{\thepage}
 - \usepackage{booktabs}
 - \usepackage{lettrine}
@@ -158,7 +158,7 @@ Cover somewhere:
 
 
 
-\subsection{Converting univariable regression results to Cohen's $d$}
+\subsection{Univariable regression}
 
 \begin{lemma}
 Under the standard OLS framework, suppose that $Y = \beta_0 + \beta X + \epsilon$ with $X \amalg \epsilon$ and $E [ \epsilon ] = 0$. Then $ \sigma^2_{Y | X} = \left( 1 - \rho_{YX}^2 \right) \sigma^2_{Y}$. 
@@ -186,31 +186,33 @@ d &= \frac{ E [ Y \; \vert \; X=c+\Delta ] - E [ Y \; \vert \; X=c ] }{ \sigma_{
 &= \frac{ \Delta \rho_{YX} }{ \sigma_X \sqrt{1 - \rho_{YX}^2} }
 \end{align*}
 
-An approximate standard error can be derived using the delta method. Let $z^f = \text{arctanh}(\rho)$ be the Fisher-transformed correlation, which is approximately normal with variance $\frac{1}{N-3}$. Define the transformation:
+An approximate standard error can be derived using the delta method, treating $\sigma_X$ as known. Let $z^f = \text{arctanh}(\rho)$ be the Fisher-transformed correlation, which is approximately normal with variance $\frac{1}{N-3}$. Define the transformation:
 
 \begin{align*}
 g(z^f) &= d = \frac{ \Delta \text{tanh} \left(z^f\right) }{ \sigma_X \sqrt{1 - \text{tanh}^2 \left(z^f\right)} } \\
 SE_{d} &\approx \sqrt{ \text{Var}(z^f) } \left( g'\left( z^f \right) \right) \\
 &= \frac{1}{\sqrt{N-3}} \times \frac{\Delta}{\sigma_X \sqrt{ \text{sech}^2(z^f) } } \\
 &= \frac{\Delta}{ \sigma_X \sqrt{ (N-3) \left( 1 - \rho_{XY}^2 \right) } } \\
-&= \frac{\Delta}{ \sigma_X \sqrt{ (N-3) \left( 1 - \beta^2 \frac{\sigma^2_X}{\sigma^2_Y} \right) } }
+&= \frac{\Delta}{ \sigma_X \sqrt{ (N-3) \left( 1 - \beta^2 \frac{\sigma^2_X}{\sigma^2_Y} \right) } } \\
+&= \frac{d}{\rho_{YX} \sqrt{N-3}}
 \end{align*}
 
 
-\subsection{E-value for a univariable regression}
-
-As in @ding, convert approximately to a relative risk:
+To obtain an approximate E-value, we can approximately convert the point estimate to a relative risk [@evalue]:
 \begin{align*}
 RR \approx \exp\left( 0.91 \times \frac{ \Delta \rho_{XY} }{ \sigma_X \sqrt{1 - \rho_{XY}^2} } \right)
 \end{align*}
 
-Approximate confidence interval limits are:
+Approximate confidence interval limits are [@evalue]:
 \begin{align*}
 RR_{lb} &\approx \exp\left( 0.91 \times \frac{ \Delta \rho_{XY} }{ \sigma_X \sqrt{1 - \rho_{XY}^2} } - 1.78 \times SE_{d} \right) \\
 &= RR_{ub} \approx \exp\left( 0.91 \times \frac{ \Delta \rho_{XY} }{ \sigma_X \sqrt{1 - \rho_{XY}^2} } + 1.78 \times SE_{d} \right)
 \end{align*}
 
-\subsection{Converting multivariable regression results to Cohen's $d$}
+
+
+
+\subsection{Multivariable regression}
 
 Extend the regression model to include arbitrary measured covariates $\mathbf{Z}$:
 \begin{align*}
@@ -233,14 +235,21 @@ d &= \frac{ E [ Y \; \vert \; X=c+\Delta, \mathbf{Z} ] - E [ Y \; \vert \; X=c, 
 & \ge \frac{ \Delta \beta }{ \sigma_{Y} \sqrt{ 1 - R^2_{Y \sim X | Z} } }
 \end{align*}
 
-Because $\sigma_{Y|\mathbf{Z}}$ is not commonly reported, the final line provides a conservative lower bound on $d$ using the more commonly reported $\sigma_{Y}$. 
+Because $\sigma_{Y|\mathbf{Z}}$ is not commonly reported, the final line provides a conservative lower bound on $d$ using the more commonly reported $\sigma_{Y}$. Unlike in the univariable case, a simple relationship between $\beta$ and $R^2_{Y \sim X | Z}$ is not available with additional distributional assumptions, so both quantities are needed to approximate $d$. 
 
-Unlike in the univariable case, a simple relationship between $\beta$ and $R^2_{Y \sim X | Z}$ is not available with additional distributional assumptions, so both quantities are needed to approximate $d$. 
+To estimate the standard error, we first assume the following approximate analogs to exact relationships in the univariable setting:
 
-Standard error:
-Going to be hard because inference for $R^2_{YX | Z}$ won't be available. For an approximation, could maybe use $Var\left( z^f_{YX | Z}\right) \approx Var\left( z^f_{YX}\right) = \frac{1}{N-3}$, but even so, can't use delta method because estimates of $\beta$ and $R^2_{YX | Z}$ are obviously not independent. 
+\begin{align*}
+\left( \beta \frac{\sigma_X}{\sigma_Y} \right)^2 &\approx R^2_{Y \sim X | Z} \\
+\text{Var}( z^f_{YX \bullet Z} ) &\approx \text{Var}( z^f_{YX} ) = \frac{1}{N-3}
+\end{align*}
+where $z^f_{YX \bullet Z} = \text{arctanh} \left( \sqrt{R^2_{Y \sim X | Z}} \right)$ is the Fisher-transformed partial correlation. Then, proceeding algebraically and applying the delta method as in the univariable case, we obtain:
 
+\begin{align*}
+SE_{d} &= \frac{d}{ \sqrt{ R^2_{Y \sim X | Z} (N-3)}}
+\end{align*}
 
+This approximate standard error appears to perform very well in simulations across a number of scenarios, including those with high correlations between $\mathbf{Z}$ and $X$ and between $\mathbf{Z}$ and $Y$. 
 
 
 \section*{References}
